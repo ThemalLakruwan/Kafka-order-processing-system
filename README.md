@@ -9,6 +9,7 @@ Dead Letter Queue - Permanently failed messages sent to DLQ after max retries
 Docker-based Setup - Easy deployment with Docker Compose  
 Schema Registry - Centralized schema management with Confluent Schema Registry  
 
+```
 BigDataCode/
 ├── schemas/
 │   └── order.avsc          
@@ -18,7 +19,7 @@ BigDataCode/
 ├── consumer.py             
 ├── requirements.txt        
 └── README.md              
-
+```
 
 ## System Architecture
 
@@ -28,6 +29,7 @@ BigDataCode/
 
 ## Avro Schema (order.avsc)
 
+```json
 {
   "type": "record",
   "name": "Order",
@@ -50,6 +52,7 @@ BigDataCode/
     }
   ]
 }
+```
 
 
 
