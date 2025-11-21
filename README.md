@@ -25,7 +25,7 @@ BigDataCode/
 
 ![System Architecture](./Images/Overall_architecture.png)
 
-![Component Interactions](Images\component_interaction.png)
+![Component Interactions](./Images/component_interaction.png)
 
 ## Avro Schema (order.avsc)
 
