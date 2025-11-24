@@ -154,18 +154,13 @@ class OrderConsumer:
     def process_order(self, order):
         """
         Process an order message
-        Simulates processing with 10% failure rate for demonstration
+        Validates price and processes the order
         """
         order_id = order['orderId']
         
-        # Simulate processing failure (10% chance)
-        import random
-        if random.random() < 0.1:
-            raise Exception("Simulated processing error (random failure)")
-        
-        # Simulate invalid price check
+        # Validate price - negative prices are invalid
         if order['price'] < 0:
-            raise ValueError("Invalid price: price cannot be negative")
+            raise ValueError(f"Invalid price: ${order['price']:.2f} - price cannot be negative")
         
         # Successfully process the order
         print(f"\n✓ ORDER PROCESSED SUCCESSFULLY")
@@ -192,8 +187,18 @@ class OrderConsumer:
             print(f"   Product: {order['product']}")
             print(f"   Price: ${order['price']:.2f}")
             
+            # Check current retry count
+            order_id = order['orderId']
+            current_retry_count = self.retry_counts.get(order_id, 0)
+            if current_retry_count > 0:
+                print(f"   Retry attempt: {current_retry_count}/{config.MAX_RETRIES}")
+            
             # Process the order
             self.process_order(order)
+            
+            # Success - clear retry count if exists
+            if order_id in self.retry_counts:
+                del self.retry_counts[order_id]
             
             return True
             
@@ -208,7 +213,6 @@ class OrderConsumer:
             if retry_count < config.MAX_RETRIES:
                 # Send to retry topic
                 self.send_to_retry(order, error_msg)
-                time.sleep(config.RETRY_DELAY_SECONDS)
                 return False
             else:
                 # Max retries exceeded, send to DLQ
@@ -252,9 +256,10 @@ class OrderConsumer:
                 # Handle the message
                 success = self.handle_message(msg, msg.topic())
                 
-                # Commit offset only if processing was successful
-                if success or msg.topic() == config.RETRY_TOPIC:
-                    self.consumer.commit(asynchronous=False)
+                # Always commit offset after handling (whether success or failure)
+                # This ensures we don't reprocess the same message from the original topic
+                # Failed messages are already sent to retry/DLQ topics
+                self.consumer.commit(asynchronous=False)
                 
         except KeyboardInterrupt:
             print(f"\n\n{'='*60}")

@@ -60,14 +60,20 @@ class OrderProducer:
             print(f'✓ Message delivered to {msg.topic()} [partition {msg.partition()}] at offset {msg.offset()}')
     
     def generate_order(self, order_id):
-        """Generate a random order"""
+        """Generate a random order with 10% chance of negative price (for testing failure scenarios)"""
         products = ['Laptop', 'Phone', 'Tablet', 'Monitor', 'Keyboard', 
                    'Mouse', 'Headphones', 'Webcam', 'Printer', 'Router']
+        
+        # 10% chance to generate a "bad" order with negative price for testing
+        if random.random() < 0.1:
+            price = round(random.uniform(-100.0, -10.0), 2)  # Negative price will trigger failures
+        else:
+            price = round(random.uniform(10.0, 1000.0), 2)
         
         order = {
             'orderId': str(order_id),
             'product': random.choice(products),
-            'price': round(random.uniform(10.0, 1000.0), 2)
+            'price': price
         }
         
         return order
