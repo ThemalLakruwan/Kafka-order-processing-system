@@ -240,8 +240,14 @@ class OrderConsumer:
                 if msg.error():
                     if msg.error().code() == KafkaError._PARTITION_EOF:
                         continue
+                    elif msg.error().code() == KafkaError.UNKNOWN_TOPIC_OR_PART:
+                        # Topic doesn't exist yet, wait and continue
+                        print(f"⏳ Waiting for topic '{msg.error().name()}' to be created...")
+                        time.sleep(2)
+                        continue
                     else:
-                        raise KafkaException(msg.error())
+                        print(f"⚠️  Kafka error: {msg.error()}")
+                        continue
                 
                 # Handle the message
                 success = self.handle_message(msg, msg.topic())
